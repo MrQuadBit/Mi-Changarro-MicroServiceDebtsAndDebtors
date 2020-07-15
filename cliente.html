@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>Mi Changarro</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<style type="text/css">
+		#floating_container{
+			width:90px;
+			height:240px;
+			position:sticky;
+			right:0px;
+			bottom:0px;
+		}
+		#floating_button{
+			width:60px;
+			height:60px;
+			border-radius:70%;
+			background:#F75A54FF;
+			right:0;
+			bottom:0;
+			position:absolute;
+			margin-right:16px;
+			margin-bottom:16px;
+			border:none;
+			outline:none;
+			color:#F1FAEE;
+			font-size:36px;
+			box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+			transition:.3s;  
+		}
+	</style>
+</head>
+<body style="background-color:#F1FAEE" onload="loadPersons()">
+	<header style="background-color:#F38783; color:#01161E;">
+		<nav class="navbar navbar-light justify-content-start">
+			<h1 class="navbar-nav">Mi changarro</h1>
+			<button class="navbar-toggler" data-toggle="collapse" data-target="#options">
+    			<span class="navbar-toggler-icon"></span>
+ 			</button>
+ 			<div class="collapse navbar-collapse" id="options">
+ 				<ul class="navbar-nav">
+ 					<li class="nav-item"><a class="nav-link" href="#" onclick="error404()">Mi cuenta</a></li>
+ 					<li class="nav-item"><a class="nav-link" href="#" onclick="error404()">Ajustes</a></li>
+ 					<li class="nav-item"><a class="nav-link" href="#" onclick="error404()">Salir</a></li>
+ 				</ul>
+ 			</div>
+		</nav>
+
+		<div class="container-xl">
+			<ul class="nav justify-content-center nav-tabs">
+				<li class="nav-item"><h2><a class="nav-link" href="#" style="color:#F1FAEE" onclick="window.location.reload()">Deudas</a></h2></li>
+				<li class="nav-item active"><h2><a class="nav-link" href="#" style="color:#124559" onclick="error404()">Hoy</a></h2></li>
+				<li class="nav-item"><h2><a class="nav-link" href="#" style="color:#124559" onclick="error404()">Historial</a></h2></li>
+			</ul>
+		</div>
+	</header>
+	
+	<main role="main">
+		<div id="no_persons_label" style="display: block;">
+			<br>
+			<h2 class="text-center" style="color: #124559;">No tiene Deudas ni Deudores</h2>
+			<br>
+		</div>
+
+		<div id="cards" style="display: none;">
+			<br>
+			<div class="card d-flex justify-content-center mx-auto" style="width:75%; background-color:#124559; color:#F1FAEE">
+				<div class="card-header d-flex justify-content-between">
+					<label class="text-left">Tipo</label>
+					<a href="#" onclick="cardEdit(this)"><span class="material-icons" style="background-color:#124559; color:#F1FAEE">edit</span></a>
+					<a href="#" onclick="cardPatch(this)"><span class="material-icons" style="background-color:#124559; color:#F1FAEE">check</span></a>
+					<a href="#" onclick="cardDelete(this)"><span class="material-icons" style="background-color:#124559; color:#F1FAEE">close</span></a>
+				</div>
+				<div class="card-body text-center">Nombre</div>
+				<div class="card-footer text-right">Cantidad</div>
+			</div>
+			<br>
+			
+		</div>
+		<div id="floating_container">
+			<button id="floating_button" onclick="addNewPerson()">+</button>
+		</div>
+		<br>
+	</main>
+
+	<footer class="page-footer font-small pink pt-4">
+		<div class="footer-copyright text-center py-3">
+		© Mi Changarro - Ayala De La Rosa José Daniel - 2020
+		</div>
+	</footer>
+	<script type="text/javascript">
+		/*Global memory*/
+		let current_person = new Object()
+		let is_editing = false
+
+		function loadPersons(){
+			//console.log("loadPersons")
+			let xhttp = new XMLHttpRequest()
+			xhttp.onreadystatechange = function(){
+				if (this.readyState == 4 && this.status == 200){
+					xml = this.responseXML
+					persons = xml.getElementsByTagName('person')
+					//console.log(persons.length)
+					if (persons.length > 0) {
+						document.getElementById("no_persons_label").style.display = "none"
+						document.getElementById("cards").style.display = "block"
+						//console.log(persons)
+						printPersons(persons)
+
+					}
+				}else if (this.readyState == 4 && this.status != 200) {
+					alert('No se pudo contactar con el servidor, revise su conexión de Internet')
+				}
+			}
+			xhttp.open("GET", "http://127.0.0.1:4040/debts&debtors", true)
+			xhttp.send()
+		}
+
+		function printPersons(persons){
+			//console.log('printPersons')
+			cards_container = document.getElementById('cards')
+			cards = cards_container.getElementsByClassName('card')
+
+			/*Create card tamplate*/
+			card_base = cards[0].cloneNode(true)
+
+			/*Delete current cards*/
+			cards_lenght = cards.length
+			for(let i = 0; i < cards_lenght;  i++){
+				cards_container.removeChild(cards[i])
+			}
+			
+			/*Create and print new cards*/
+			for(let i = 0; i < persons.length; i++){
+				let new_card = card_base.cloneNode(true)
+				cards_container.appendChild(new_card)
+				cards_container.appendChild(document.createElement('br'))
+			}
+			/*Filling cards*/
+			for(let i = 0; i < cards.length; i++){
+				card_divs = cards[i].getElementsByTagName('div')
+				for(let j = 0; j < card_divs.length; j++){
+					switch(j){
+						case 0:
+							tag_label = card_divs[j].getElementsByTagName('label')
+							if(persons[i].getAttribute('type') == 1){
+								tag_label[0].innerHTML = 'Deuda'
+							}else{
+								tag_label[0].innerHTML = 'Deudor'
+							}
+						break;
+
+						case 1:
+							name = persons[i].getElementsByTagName("name")[0].childNodes[0].nodeValue
+							card_divs[j].innerHTML = name
+						break;
+
+						case 2:
+							quantity = persons[i].getElementsByTagName("quantity")[0].childNodes[0].nodeValue
+							card_divs[j].innerHTML = quantity
+						break;
+					}
+				}
+			}
+		}
+		function addNewPerson(){
+			/*get the new person*/
+			let new_person = new Object()
+			new_person.type = prompt("¿Deuda o Deudor?", "Deuda")
+			new_person.name = prompt("¿Nombre de la nueva persona?", "Nombre")
+			new_person.quantity = prompt("¿Cantidad?", "0")
+
+			/*Parsing type person to number*/
+			if (new_person.type == "Deuda" || new_person.type == "Deudor" || new_person.type == "deuda" || new_person.type == "deudor") {
+				if (new_person.type == "Deuda" || new_person.type == "deuda") {
+					new_person.type = 1
+				}else{
+					new_person.type = 0
+				}
+			}else{
+				alert(new_person.type + "no es un tipo valido")
+				return 0
+			}
+			//console.log(new_person)
+
+			/*create xml*/
+			xml_string = `
+				<debts_and_debtors>
+    				<person type="`+ new_person.type +`">
+	    				<name>`+ new_person.name +`</name>
+	    				<quantity>`+ new_person.quantity +`</quantity>
+    				</person>
+    			</debts_and_debtors>`
+    		console.log(xml_string)
+
+    		/*Transforming string to XML it could make an error*/
+    		parser = new DOMParser()
+    		xml = parser.parseFromString(xml_string, 'text/xml')
+    		console.log(xml)
+
+			/*send xml by POST method*/
+			let xhttp = new XMLHttpRequest()
+			xhttp.open("POST", 'http://127.0.0.1:4040/debts&debtors', true)
+			xhttp.setRequestHeader('Content.type', 'text/xml')
+			xhttp.onreadystatechange = function(){
+				if (this.readyState == XMLHttpRequest.DONE && this.status == 201) {
+					window.location.reload();
+				}else if(this.readyState == XMLHttpRequest.DONE && this.status != 201){
+					//console.log(this)
+					alert('No se pudo agregar la persona, intente más tarde')
+				}
+			}
+			xhttp.send(xml)
+		}
+		function error404(){
+			alert("Opción no disponible")
+		}
+		function cardEdit(edit_button){
+			/*Get card container*/
+			card = edit_button.parentNode.parentNode
+
+			console.log(card)
+			/*know if edit button was clicked*/
+			if (is_editing) {
+				is_editing = false
+
+				/*put inputs*/
+				card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML = current_person.type
+				card.getElementsByTagName('div')[1].innerHTML = current_person.name
+				card.getElementsByTagName('div')[2].innerHTML = current_person.quantity
+			}else{
+				is_editing = true
+
+				/*Backing up current person*/
+				current_person.type = card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML
+				current_person.name = card.getElementsByTagName('div')[1].innerHTML
+				current_person.quantity = card.getElementsByTagName('div')[2].innerHTML
+
+				/*put inputs*/
+				if(card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML == "Deuda"){
+					card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML = `
+					<select name="type">
+					    <option value="0">Deudor</option>
+					    <option value="1" selected>Deuda</option>
+					  </select>`
+				}else{
+					card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML = `
+					<select name="type">
+					    <option value="0">Deudor</option>
+					    <option value="1">Deuda</option>
+					  </select>`
+				}
+				
+				card.getElementsByTagName('div')[1].innerHTML = "<input type='text' name='name' value='"+card.getElementsByTagName('div')[1].innerHTML+"'>"
+				card.getElementsByTagName('div')[2].innerHTML = "<input type='text' name='quantity' value='"+card.getElementsByTagName('div')[2].innerHTML+"'>"
+			}
+		}
+
+		function cardPatch(update_button){
+			if (is_editing) {
+				/*Get new values*/
+				card = update_button.parentNode.parentNode
+				inputs_select = card.getElementsByTagName('select')
+				inputs_text = card.getElementsByTagName('input')
+				console.log(inputs_select[0].value)
+
+				/*create xml*/
+				xml_string = `
+					<debts_and_debtors>
+	    				<person type="`+ current_person.type +`">
+		    				<name>`+ current_person.name +`</name>
+		    				<quantity>`+ current_person.quantity +`</quantity>
+	    				</person>`+`
+
+	    				<person type="`+ inputs_select[0].value +`">
+	    				<name>`+ inputs_text[0].value +`</name>
+		    				<quantity>`+ inputs_text[1].value +`</quantity>
+	    				</person>
+	    			</debts_and_debtors>`
+    			console.log(xml_string)
+
+    			/*Transforming string to XML it could make an error*/
+	    		parser = new DOMParser()
+	    		xml = parser.parseFromString(xml_string, 'text/xml')
+	    		//console.log(xml)
+
+				/*send xml by PATCH method*/
+				let xhttp = new XMLHttpRequest()
+				xhttp.open("PATCH", 'http://127.0.0.1:4040/debts&debtors', true)
+				xhttp.setRequestHeader('Content.type', 'text/xml')
+				xhttp.onreadystatechange = function(){
+					if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
+						window.location.reload();
+					}else if(this.readyState == XMLHttpRequest.DONE && this.status != 200){
+						//console.log(this)
+						alert('No se pudo actualizar la persona, intente más tarde')
+					}
+				}
+				xhttp.send(xml)
+				/*reload the persons list*/
+
+				//alert('Person was updated')
+				//cardEdit(update_button)
+				//window.location.reload();
+			}else{
+				alert('Primero se debe de editar una persona antes de actualizar')
+			}
+		}
+
+		function cardDelete(delete_button){
+			//console.log("cardDelete")
+			/*get grand father or card*/
+			card = delete_button.parentNode.parentNode
+
+			/*get data*/
+			let person = new Object()
+			if(card.getElementsByTagName('div')[0].getElementsByTagName('label')[0].innerHTML == "Deuda"){
+				person.type = 1
+			}else{
+				person.type = 0
+			}
+			person.name = card.getElementsByTagName('div')[1].innerHTML
+			person.quantity = card.getElementsByTagName('div')[2].innerHTML
+			//console.log(card)
+			//console.log(person)
+
+			/*create xml*/
+			xml_string = `
+				<debts_and_debtors>
+    				<person type="`+ person.type +`">
+	    				<name>`+ person.name +`</name>
+	    				<quantity>`+ person.quantity +`</quantity>
+    				</person>
+    			</debts_and_debtors>`
+    		//console.log(xml_string)
+
+    		/*Transforming string to XML it could make an error*/
+    		parser = new DOMParser()
+    		xml = parser.parseFromString(xml_string, 'text/xml')
+    		//console.log(xml)
+
+			/*send xml by DELETE method*/
+			let xhttp = new XMLHttpRequest()
+			xhttp.open("DELETE", 'http://127.0.0.1:4040/debts&debtors', true)
+			xhttp.setRequestHeader('Content.type', 'text/xml')
+			xhttp.onreadystatechange = function(){
+				if (this.readyState == XMLHttpRequest.DONE && this.status == 200) {
+					window.location.reload();
+				}else if(this.readyState == XMLHttpRequest.DONE && this.status != 200){
+					//console.log(this)
+					alert('No se pudo eliminar la persona, intente más tarde')
+				}
+			}
+			xhttp.send(xml)
+			/*Reload persons list*/
+		}
+	</script>
+</body>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+</html>

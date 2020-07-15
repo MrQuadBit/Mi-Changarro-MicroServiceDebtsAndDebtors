@@ -1,0 +1,5 @@
+<!ELEMENT debts_and_debtors (person*)>
+<!ELEMENT person (name, quantity)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT quantity (#PCDATA)>
+<!ATTLIST person type CDATA #REQUIRED>

@@ -1,0 +1,23 @@
+<?xml-stylesheet type="text/xsl" href="persons.xsl"?>
+<debts_and_debtors>
+    <person type="1">
+        <name>juan</name>
+        <quantity>120</quantity>
+    </person>
+    <person type="0">
+        <name>fernando</name>
+        <quantity>75</quantity>
+    </person>
+    <person type="0">
+        <name>daniel</name>
+        <quantity>44</quantity>
+    </person>
+    <person type="0">
+        <name>marlene</name>
+        <quantity>22</quantity>
+    </person>
+<person type="1">
+        <name>fernanda</name>
+        <quantity>97</quantity>
+    </person>
+</debts_and_debtors>
